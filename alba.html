@@ -41,7 +41,6 @@
             overflow-y: auto;
             border-left: 5px solid #ffa400;
         }
-        /* ... (restante do CSS do painel de skills e modal permanece o mesmo) ... */
         .skill { margin-bottom: 15px; }
         .skill-name { font-weight: 600; margin-bottom: 5px; color: #ff595a; }
         .progress-bar-container { background-color: #aec5e7; border-radius: 8px; height: 20px; overflow: hidden; }
@@ -49,7 +48,7 @@
         #totalizer { margin-top: auto; padding-top: 20px; border-top: 2px solid #e6cbe4; }
         #totalizer-name { font-weight: 700; font-size: 1.2em; color: #ff595a; margin-bottom: 5px; }
         #totalizer-score { font-size: 1.5em; font-weight: bold; color: #ffa400; }
-        #interaction-message { position: absolute; bottom: 80px; /* Ajustado para não colidir com botões de toque */ left: 50%; transform: translateX(-50%); background-color: rgba(0,0,0,0.7); color: white; padding: 10px 20px; border-radius: 8px; display: none; z-index: 100; text-align: center; }
+        #interaction-message { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background-color: rgba(0,0,0,0.7); color: white; padding: 10px 20px; border-radius: 8px; display: none; z-index: 100; text-align: center; }
         .button-style { background-color: #ff595a; color: white; padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background-color 0.3s; margin-top: 10px; }
         .button-style:hover { background-color: #e04849; }
         #info-modal { position: fixed; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
@@ -63,10 +62,10 @@
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.7);
-            display: flex;
+            display: flex; /* Mantido para centralizar o botão */
             justify-content: center;
             align-items: center;
-            z-index: 2000; /* Acima de tudo */
+            z-index: 2000; 
         }
         #start-game-button {
             padding: 20px 40px;
@@ -83,12 +82,12 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            display: none; /* Escondido por padrão, mostrado para touch */
+            display: none; 
             gap: 20px;
             z-index: 150;
         }
         .touch-button {
-            background-color: rgba(255, 89, 90, 0.8); /* #ff595a com alpha */
+            background-color: rgba(255, 89, 90, 0.8); 
             color: white;
             width: 60px;
             height: 60px;
@@ -99,8 +98,8 @@
             align-items: center;
             font-size: 24px;
             font-weight: bold;
-            user-select: none; /* Impede seleção de texto ao tocar */
-            -webkit-user-select: none; /* Safari */
+            user-select: none; 
+            -webkit-user-select: none; 
         }
     </style>
 </head>
@@ -190,7 +189,7 @@
         const isTouchDevice = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
 
         // Sons (Tone.js)
-        let synth, discoverySound, interactionPromptSound; // Declarar aqui, inicializar depois do Tone.start()
+        let synth, discoverySound, interactionPromptSound; 
 
         function initializeSounds() {
             synth = new Tone.Synth().toDestination();
@@ -225,7 +224,7 @@
 
         function updateTotalizer() {
             let total = 0;
-            Object.keys(skills).forEach(key => { // Corrigido: usar apenas um loop para somar
+            Object.keys(skills).forEach(key => { 
                 total += skills[key].current;
             });
             totalizerScoreEl.textContent = total;
@@ -233,7 +232,7 @@
         
         Object.keys(skills).forEach(skillName => { updateSkill(skillName, 0); });
 
-        // --- Luzes, Cenário, Animais (permanecem os mesmos da v0.1) ---
+        // --- Luzes, Cenário, Animais ---
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); 
         scene.add(ambientLight);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8); 
@@ -258,13 +257,13 @@
             const leavesHeight = 1.5 + Math.random();
             const leavesRadius = 0.8 + Math.random() * 0.4;
             const trunkGeometry = new THREE.CylinderGeometry(trunkRadius, trunkRadius, trunkHeight, 8);
-            const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+            const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 }); // Marrom para o tronco
             const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
             trunk.position.set(x, trunkHeight / 2, z);
             trunk.castShadow = true;
             scene.add(trunk);
             const leavesGeometry = new THREE.ConeGeometry(leavesRadius, leavesHeight, 8);
-            const leavesMaterial = new THREE.MeshStandardMaterial({ color: 0x2E7D32 });
+            const leavesMaterial = new THREE.MeshStandardMaterial({ color: 0x2E7D32 }); // Verde escuro para a copa
             const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
             leaves.position.set(x, trunkHeight + leavesHeight / 2, z);
             leaves.castShadow = true;
@@ -286,7 +285,7 @@
         const animalData = [
             { id: "bird1", name: "Pássaro Azul", info: "Este pássaro adora cantar pela manhã! Ele se alimenta de pequenas sementes.", skills: { exploracao: 5, observacao: 10, conhecimento: 2 }, color: 0x3498db },
             { id: "butterfly1", name: "Borboleta Amarela", info: "As borboletas são importantes para polinizar flores. Esta tem asas amarelas vibrantes.", skills: { exploracao: 5, observacao: 10, conhecimento: 2 }, color: 0xf1c40f },
-            { id: "fish1", name: "Peixinho Dourado", info: "Este peixinho vive na lagoa. Ele gosta de nadar entre as plantas aquáticas.", skills: { exploracao: 3, observacao: 8, conhecimento: 1 }, color: 0xffa500 }
+            { id: "fish1", name: "Peixinho Cilíndrico", info: "Este peixinho vive na lagoa. Ele gosta de nadar entre as plantas aquáticas.", skills: { exploracao: 3, observacao: 8, conhecimento: 1 }, color: 0xffa500 } // Nome alterado para refletir a mudança
         ];
         animalData.forEach(data => {
             let animalMesh;
@@ -295,7 +294,7 @@
                 const bodyMat = new THREE.MeshStandardMaterial({ color: data.color });
                 animalMesh = new THREE.Mesh(bodyGeom, bodyMat);
                 const beakGeom = new THREE.ConeGeometry(0.05, 0.2, 8);
-                const beakMat = new THREE.MeshStandardMaterial({ color: 0xffa500 });
+                const beakMat = new THREE.MeshStandardMaterial({ color: 0xffa500 }); // Laranja para o bico
                 const beak = new THREE.Mesh(beakGeom, beakMat);
                 beak.position.z = 0.3; 
                 beak.rotation.x = Math.PI / 2;
@@ -312,10 +311,11 @@
                 animalMesh.add(leftWing); animalMesh.add(rightWing);
                 animalMesh.position.set((Math.random() - 0.5) * 15, 1.2 + Math.random() * 0.5, (Math.random() - 0.5) * 15);
             } else if (data.id.includes("fish")) {
-                const fishGeom = new THREE.CapsuleGeometry(0.15, 0.4, 4, 8);
+                // SUBSTITUÍDO: CapsuleGeometry por CylinderGeometry
+                const fishGeom = new THREE.CylinderGeometry(0.15, 0.15, 0.6, 8); // (radiusTop, radiusBottom, height, radialSegments)
                 const fishMat = new THREE.MeshStandardMaterial({ color: data.color });
                 animalMesh = new THREE.Mesh(fishGeom, fishMat);
-                animalMesh.rotation.z = Math.PI / 2; 
+                animalMesh.rotation.z = Math.PI / 2; // Deitar o cilindro para parecer um peixe
                 const angle = Math.random() * Math.PI * 2;
                 const radius = Math.random() * 4; 
                 animalMesh.position.set(pond.position.x + Math.cos(angle) * radius, 0.2, pond.position.z + Math.sin(angle) * radius);
@@ -335,53 +335,56 @@
         let touchLookStartX = 0, touchLookStartY = 0;
         let currentTouchId = null;
 
-
+        // Event listener para o botão Iniciar Exploração
         startGameButton.addEventListener('click', async () => {
+            console.log("Botão 'Iniciar Exploração' clicado!"); 
+
+            startGameOverlay.style.display = 'none';
+            gameStarted = true; 
+            console.log("Overlay escondido. gameStarted definido como true.");
+
             try {
+                console.log("Tentando iniciar Tone.js...");
                 await Tone.start();
                 console.log("Tone.js iniciado com sucesso!");
-                initializeSounds(); // Inicializa os synths DEPOIS que Tone.start() foi resolvido
-                gameStarted = true;
-                startGameOverlay.style.display = 'none';
-
-                if (isTouchDevice) {
-                    touchControlsContainer.style.display = 'flex'; // Mostrar controles de toque
-                    // Não tentar pointer lock em dispositivos de toque
-                } else {
-                    gameContainer.requestPointerLock()
-                        .catch(err => console.warn("Não foi possível bloquear o ponteiro:", err));
-                }
-                // Mensagem inicial após o início do jogo
-                setTimeout(() => {
-                    infoModalTitle.textContent = "Bem-vindo(a) Explorador(a)!";
-                    infoModalText.innerHTML = `Use ${isTouchDevice ? 'os controles na tela e deslize para olhar' : '<b>W, A, S, D</b> e o <b>mouse</b>'} para explorar.<br>Aproxime-se dos animais e ${isTouchDevice ? 'toque neles' : 'pressione <b>E</b>'} para observá-los!`;
-                    infoModal.style.display = 'flex';
-                }, 500);
+                initializeSounds(); 
+                
+                infoModalTitle.textContent = "Bem-vindo(a) Explorador(a)!";
+                infoModalText.innerHTML = `Use ${isTouchDevice ? 'os controles na tela e deslize para olhar' : '<b>W, A, S, D</b> e o <b>mouse</b>'} para explorar.<br>Aproxime-se dos animais e ${isTouchDevice ? 'toque neles' : 'pressione <b>E</b>'} para observá-los!`;
+                infoModal.style.display = 'flex';
+                console.log("Modal de boas-vindas exibido.");
 
             } catch (error) {
                 console.error("Erro ao iniciar Tone.js:", error);
-                // Informar ao usuário que algo deu errado com o áudio
                 infoModalTitle.textContent = "Problema no Áudio";
-                infoModalText.innerHTML = "Não foi possível iniciar o sistema de áudio. O jogo continuará sem som.";
-                infoModal.style.display = 'flex';
-                gameStarted = true; // Permite que o jogo comece mesmo sem áudio
-                startGameOverlay.style.display = 'none';
-                 if (isTouchDevice) touchControlsContainer.style.display = 'flex';
+                infoModalText.innerHTML = "Não foi possível iniciar o sistema de áudio. O jogo continuará sem som.<br>Pressione 'Continuar Explorando' no modal para jogar.";
+                infoModal.style.display = 'flex'; 
+                console.log("Modal de erro de áudio exibido.");
+            }
 
+            if (isTouchDevice) {
+                touchControlsContainer.style.display = 'flex'; 
+                console.log("Controles de toque ativados.");
+            } else {
+                if (document.pointerLockElement !== gameContainer) {
+                    console.log("Tentando bloquear o ponteiro do mouse...");
+                    gameContainer.requestPointerLock()
+                        .then(() => console.log("Bloqueio do ponteiro bem-sucedido."))
+                        .catch(err => console.warn("Não foi possível bloquear o ponteiro:", err));
+                }
             }
         });
         
         function onPointerLockChange() {
             if (document.pointerLockElement !== gameContainer && !isTouchDevice) {
-                // Opcional: Pausar o jogo ou mostrar um menu se o pointer lock for perdido
-                console.log("Pointer lock perdido");
+                console.log("Bloqueio do ponteiro perdido.");
             }
         }
         document.addEventListener('pointerlockchange', onPointerLockChange, false);
 
 
         function onMouseMove(event) {
-            if (document.pointerLockElement === gameContainer && !isTouchDevice) {
+            if (document.pointerLockElement === gameContainer && !isTouchDevice && gameStarted) {
                 camera.rotation.y -= event.movementX * 0.001 * lookSpeed;
                 camera.rotation.x -= event.movementY * 0.001 * lookSpeed;
                 camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
@@ -391,7 +394,6 @@
             document.addEventListener('mousemove', onMouseMove, false);
         }
 
-        // Controles de Teclado
         const onKeyDown = function (event) {
             if (!gameStarted) return;
             switch (event.code) {
@@ -414,48 +416,37 @@
         document.addEventListener('keydown', onKeyDown);
         document.addEventListener('keyup', onKeyUp);
 
-        // Controles de Toque
         if (isTouchDevice) {
             gameContainer.addEventListener('touchstart', (event) => {
                 if (!gameStarted) return;
-                // Prevenir comportamento padrão (scroll, zoom)
                 event.preventDefault(); 
-                
-                // Usar o primeiro toque para controle da câmera
-                if (event.touches.length === 1 && currentTouchId === null) {
-                    // Verificar se o toque não foi em um botão de controle
-                    let targetElement = event.target;
-                    let isControlButton = false;
-                    while(targetElement != null) {
-                        if (targetElement === touchForwardButton || targetElement === touchBackwardButton) {
-                            isControlButton = true;
-                            break;
-                        }
-                        targetElement = targetElement.parentElement;
+                let targetElement = event.target;
+                let isControlButton = false;
+                while(targetElement != null) {
+                    if (targetElement === touchForwardButton || targetElement === touchBackwardButton) {
+                        isControlButton = true;
+                        break;
                     }
-
-                    if (!isControlButton) {
-                        currentTouchId = event.touches[0].identifier;
-                        touchLookStartX = event.touches[0].pageX;
-                        touchLookStartY = event.touches[0].pageY;
-                    }
+                    targetElement = targetElement.parentElement;
                 }
-            }, { passive: false }); // passive: false para permitir preventDefault
+                if (!isControlButton && event.touches.length === 1 && currentTouchId === null) {
+                    currentTouchId = event.touches[0].identifier;
+                    touchLookStartX = event.touches[0].pageX;
+                    touchLookStartY = event.touches[0].pageY;
+                }
+            }, { passive: false }); 
 
             gameContainer.addEventListener('touchmove', (event) => {
                 if (!gameStarted || currentTouchId === null) return;
                 event.preventDefault();
-
                 for (let i = 0; i < event.touches.length; i++) {
                     if (event.touches[i].identifier === currentTouchId) {
                         const touch = event.touches[i];
                         const deltaX = touch.pageX - touchLookStartX;
                         const deltaY = touch.pageY - touchLookStartY;
-
-                        camera.rotation.y -= deltaX * 0.003 * lookSpeed; // Sensibilidade ajustada para toque
+                        camera.rotation.y -= deltaX * 0.003 * lookSpeed; 
                         camera.rotation.x -= deltaY * 0.003 * lookSpeed;
                         camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
-
                         touchLookStartX = touch.pageX;
                         touchLookStartY = touch.pageY;
                         break;
@@ -471,32 +462,24 @@
                         break;
                     }
                 }
-                // Se não houver mais toques na tela, resetar currentTouchId
                 if (event.touches.length === 0) {
                     currentTouchId = null;
                 }
             });
 
-            // Botões de toque para movimento
-            touchForwardButton.addEventListener('touchstart', () => { if(gameStarted) moveForward = true; });
-            touchForwardButton.addEventListener('touchend', () => { if(gameStarted) moveForward = false; });
-            touchBackwardButton.addEventListener('touchstart', () => { if(gameStarted) moveBackward = true; });
-            touchBackwardButton.addEventListener('touchend', () => { if(gameStarted) moveBackward = false; });
+            touchForwardButton.addEventListener('touchstart', (e) => { e.preventDefault(); if(gameStarted) moveForward = true; });
+            touchForwardButton.addEventListener('touchend', (e) => { e.preventDefault(); if(gameStarted) moveForward = false; });
+            touchBackwardButton.addEventListener('touchstart', (e) => { e.preventDefault(); if(gameStarted) moveBackward = true; });
+            touchBackwardButton.addEventListener('touchend', (e) => { e.preventDefault(); if(gameStarted) moveBackward = false; });
             
-            // Interação por toque no objeto
-            gameContainer.addEventListener('click', (event) => { // Usar click para simplificar, pode ser refinado para tap
-                if (!gameStarted || currentInteractable) { // Se já tem um prompt de interação, o 'E' ou o toque no prompt é melhor
-                     if (currentInteractable && isTouchDevice) {
-                        // Simular clique no currentInteractable se ele estiver visível
-                        // Isso pode ser um pouco impreciso, idealmente o raycast seria do toque
-                        tryInteract();
-                    }
+            gameContainer.addEventListener('click', (event) => { 
+                if (!gameStarted) return;
+                if (currentInteractable && isTouchDevice) {
+                    tryInteract();
                 }
             });
         }
 
-
-        // --- Lógica de Interação ---
         let currentInteractable = null;
         function checkInteraction() {
             if (!gameStarted) return;
@@ -546,21 +529,20 @@
             infoModal.style.display = 'none';
         });
 
-        // --- Loop de Animação ---
         const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate);
-            if (!gameStarted) return; // Não renderizar ou atualizar lógica se o jogo não começou
+            if (!gameStarted) return; 
 
             const delta = clock.getDelta(); 
             velocity.x -= velocity.x * 10.0 * delta;
             velocity.z -= velocity.z * 10.0 * delta;
 
             direction.z = Number(moveForward) - Number(moveBackward);
-            direction.x = Number(moveRight) - Number(moveLeft); // Teclado ainda controla strafe
+            direction.x = Number(moveRight) - Number(moveLeft); 
             direction.normalize(); 
 
-            if (moveForward || moveBackward) velocity.z -= direction.z * moveSpeed * delta * (isTouchDevice ? 3 : 5); // Ajuste de velocidade para toque
+            if (moveForward || moveBackward) velocity.z -= direction.z * moveSpeed * delta * (isTouchDevice ? 3 : 5); 
             if (moveLeft || moveRight) velocity.x -= direction.x * moveSpeed * delta * 5; 
 
             camera.translateX(-velocity.x * delta); 
@@ -582,7 +564,6 @@
             renderer.render(scene, camera);
         }
 
-        // --- Responsividade ---
         function onWindowResize() {
             camera.aspect = gameContainer.offsetWidth / gameContainer.offsetHeight;
             camera.updateProjectionMatrix();
@@ -590,7 +571,6 @@
         }
         window.addEventListener('resize', onWindowResize, false);
 
-        // Iniciar loop de animação (mas lógica do jogo só roda após gameStarted = true)
         animate(); 
         updateTotalizer();
         console.log("Exploradores da Natureza pronto. Clique em 'Iniciar Exploração'.");
