@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espelho LABirintar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Cores da Paleta LABirintar (CSS Variables) */
+        :root {
+            --lab-red: #ff595a;
+            --lab-orange: #ffa400;
+            --lab-black: #000000;
+            --lab-lilac: #e6cbe4;
+            --lab-blue: #aec5e7;
+            --lab-white: #ffffff;
+            --lab-light-gray: #f8f9fa; /* Um cinza muito claro para fundos neutros */
+            --lab-dark-gray: #333333; /* Para texto corporal, se preto puro for muito forte */
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--lab-light-gray); 
+            color: var(--lab-dark-gray); 
+            line-height: 1.6;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            color: var(--lab-black);
+        }
+        .game-container {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+        }
+        .main-content-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .dimensions-panel {
+            width: 320px; 
+            background-color: var(--lab-lilac); 
+            padding: 25px;
+            border-left: 1px solid #d0b9d3; /* Tom mais escuro do lilac */
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            transform: translateX(100%); 
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100; 
+            overflow-y: auto;
+            box-shadow: -4px 0 15px rgba(0,0,0,0.08);
+        }
+        .dimensions-panel.open {
+            transform: translateX(0);
+        }
+        .dimensions-panel h2, .dimensions-panel h3 {
+            color: var(--lab-black);
+        }
+        .choice-button {
+            background-color: var(--lab-blue); 
+            color: var(--lab-black); /* Preto para melhor contraste com azul claro */
+            padding: 14px 28px; 
+            border-radius: 10px; 
+            margin: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.05rem;
+            width: 100%;
+            max-width: 480px;
+            text-align: left;
+            box-shadow: 0 3px 6px rgba(0,0,0, 0.1); 
+            font-weight: 600;
+        }
+        .choice-button:hover {
+            background-color: #93b3d9; /* Tom mais escuro do lab-blue */
+            transform: translateY(-2px); 
+            box-shadow: 0 5px 10px rgba(0,0,0, 0.15);
+        }
+        .npc-image {
+            width: 160px; 
+            height: 160px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 25px;
+            border: 5px solid var(--lab-blue); 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .dialogue-box {
+            background-color: var(--lab-white);
+            padding: 30px; 
+            border-radius: 16px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08); 
+            max-width: 700px; 
+            text-align: center;
+        }
+        .dialogue-box #npc-name { /* Estilo para o nome do NPC */
+            color: var(--lab-black); 
+        }
+        .dialogue-box #dialogue-text strong { /* Destaque do dilema */
+            color: var(--lab-red);
+        }
+         .dialogue-box #dialogue-text em { /* Pensamento secundário */
+            color: var(--lab-dark-gray);
+            opacity: 0.8;
+        }
+
+        #toggle-dimensions-panel {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            z-index: 110; 
+            background-color: var(--lab-red);
+            color: var(--lab-white);
+            padding: 12px; 
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(0,0,0, 0.2);
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        #toggle-dimensions-panel:hover {
+            background-color: #e04849; /* Tom mais escuro do lab-red */
+            transform: scale(1.1);
+        }
+        .dimension-item {
+            background-color: rgba(255, 255, 255, 0.7); /* Branco semi-transparente sobre o painel lilac */
+            border: 1px solid #d0b9d3; /* Borda sutil */
+            color: var(--lab-black);
+            padding: 12px 15px; 
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+        .profile-summary-panel-item { /* Estilo para itens no painel de perfil */
+            color: var(--lab-black);
+        }
+        .profile-summary-panel-item .text-sm.font-semibold { 
+            padding: 3px 8px; 
+            border-radius: 6px; 
+            font-size: 0.9rem;
+            color: var(--lab-black); 
+        }
+        /* Cores de fundo para os valores do perfil, usando a paleta */
+        .profile-summary-panel-item .value-positive { background-color: var(--lab-blue); }
+        .profile-summary-panel-item .value-negative { background-color: var(--lab-red); color: var(--lab-white); } /* Texto branco no vermelho */
+        .profile-summary-panel-item .value-neutral { background-color: #d1d5db; } /* Cinza neutro */
+
+
+        .summary-dimension-bar-container {
+            width: 100%;
+            background-color: #d0b9d3; /* Lilás mais escuro para fundo da barra */
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow: hidden; 
+            height: 24px; 
+        }
+        .summary-dimension-bar {
+            height: 100%;
+            background-color: var(--lab-blue); /* Azul para a barra */
+            border-radius: 10px; 
+            transition: width 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-align: right;
+            padding-right: 8px;
+            color: var(--lab-black); /* Texto preto para contraste com azul claro */
+            font-size: 0.85rem;
+            line-height: 24px; 
+            font-weight: 600;
+        }
+        /* Botões de Ação (Começar, Reiniciar) - Usando classes do Tailwind para simplicidade, mas com cores da paleta */
+        .start-button-custom { 
+            background-color: var(--lab-orange); 
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--lab-black); /* Texto preto para contraste com laranja */
+        }
+        .start-button-custom:hover {
+            background-color: #e69500; /* Tom mais escuro do lab-orange */
+        }
+        .restart-button-custom { 
+             background-color: var(--lab-orange);
+             font-family: 'Montserrat', sans-serif;
+             font-weight: 600;
+             color: var(--lab-black);
+        }
+        .restart-button-custom:hover {
+            background-color: #e69500;
+        }
+        /* Estilos para títulos e parágrafos principais usando cores da paleta */
+        #start-screen h1, #summary-screen h2 {
+            color: var(--lab-black); /* Títulos principais em preto */
+        }
+        #start-screen p, #summary-screen p, #feedback-text {
+            color: var(--lab-dark-gray); /* Texto de apoio em cinza escuro */
+        }
+
+
+        /* Animação de fade */
+        .fade-in {
+            animation: fadeInAnimation 0.7s ease-in-out forwards;
+        }
+        .fade-out {
+            animation: fadeOutAnimation 0.7s ease-in-out forwards;
+        }
+        @keyframes fadeInAnimation {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOutAnimation {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-15px); }
+        }
+
+        /* Responsividade para telas menores */
+        @media (max-width: 768px) {
+            .dimensions-panel {
+                width: 280px; 
+                padding: 20px;
+            }
+            #toggle-dimensions-panel {
+                top: 15px;
+                right: 15px;
+                padding: 10px;
+            }
+            .dialogue-box {
+                padding: 20px;
+                max-width: 90%;
+            }
+            .choice-button {
+                padding: 12px 20px;
+                font-size: 0.95rem;
+                margin: 8px;
+            }
+            .npc-image {
+                width: 120px;
+                height: 120px;
+                margin-bottom: 20px;
+            }
+            h1 { font-size: 2.2rem; line-height: 1.2; } /* Tailwind text-4xl é 2.25rem */
+            h2 { font-size: 1.8rem; line-height: 1.2; } /* Próximo ao text-3xl */
+            .text-xl { font-size: 1.1rem; } /* Próximo ao text-xl do Tailwind */
+            #start-screen p.text-xl { margin-bottom: 2.5rem; } /* mb-10 */
+            /* Ajuste para botões de ação em mobile */
+            .start-button-custom, .restart-button-custom { padding: 0.8rem 1.8rem; font-size: 1rem; }
+            #summary-screen h2 { font-size: 2rem; }
+            #summary-screen p.text-lg { font-size: 1rem; }
+        }
+         @media (max-width: 480px) {
+            .main-content-area {
+                padding: 15px;
+            }
+            .dimensions-panel {
+                width: 100%; 
+                border-left: none;
+                box-shadow: none;
+                z-index: 200; /* Garante que fique sobre tudo quando aberto */
+            }
+             #toggle-dimensions-panel.panel-open { 
+                display: none;
+            }
+            h1 { font-size: 1.8rem; } /* Próximo ao text-3xl */
+            h2 { font-size: 1.5rem; } /* Próximo ao text-2xl */
+            .dialogue-box {
+                margin-bottom: 1.5rem; 
+            }
+             .choice-button {
+                max-width: 100%;
+                font-size: 0.9rem; 
+                padding: 10px 15px;
+            }
+            .start-button-custom, .restart-button-custom { padding: 0.7rem 1.5rem; font-size: 0.95rem; }
+
+        }
+
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen">
+
+    <div id="game-container" class="w-full">
+        <button id="toggle-dimensions-panel" title="Ver Dimensões">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.5A8 8 0 0 1 12 2.5a8 8 0 0 1 8 7.5c0 7-8 11.5-8 11.5z"></path><circle cx="12" cy="10.5" r="3.5"></circle></svg>
+        </button>
+
+        <aside id="dimensions-panel" class="dimensions-panel">
+            <h2 class="text-2xl mb-5">Dimensões em Foco</h2>
+            <ul id="dimensions-list" class="space-y-3">
+                <li class="text-slate-600 p-3 bg-white rounded-lg shadow-sm italic">Nenhuma ainda...</li>
+            </ul>
+            <hr class="my-6 border-gray-300"> <h3 class="text-xl mb-3">Seu Perfil Reflexivo</h3>
+            <div id="profile-summary-panel" class="space-y-2">
+                </div>
+        </aside>
+
+        <div id="main-content-area" class="main-content-area">
+            <div id="start-screen" class="text-center fade-in">
+                <img src="https://placehold.co/180x180/e6cbe4/000000?text=LAB" alt="Logo LABirintar" class="npc-image mx-auto mb-8">
+                <h1 class="text-4xl md:text-5xl mb-6">Espelho LABirintar</h1>
+                <p class="text-lg md:text-xl mb-10 max-w-xl mx-auto">Uma jornada sensível de autoavaliação para Educadores Empreendedores como você.</p>
+                <button id="start-button" class="start-button-custom text-white font-semibold py-4 px-10 rounded-lg text-lg shadow-lg transition-transform hover:scale-105">
+                    Começar Jornada
+                </button>
+            </div>
+
+            <div id="game-screen" class="hidden w-full max-w-2xl fade-in">
+                <div id="narrative-area" class="dialogue-box mb-8">
+                    <img id="npc-image" src="https://placehold.co/150x150/a7f3d0/166534?text=NPC" alt="Personagem" class="npc-image mx-auto">
+                    <p id="npc-name" class="text-2xl mb-3"></p>
+                    <div id="dialogue-text" class="text-md leading-relaxed text-left sm:text-center"></div>
+                </div>
+                <div id="choices-area" class="w-full flex flex-col items-center">
+                    </div>
+                 <p id="feedback-text" class="mt-6 text-center italic text-sm"></p>
+            </div>
+
+            <div id="summary-screen" class="hidden text-center fade-in w-full max-w-3xl">
+                <h2 class="text-3xl md:text-4xl mb-8">Seu Reflexo LABirintar</h2>
+                <div id="sunflower-summary" class="bg-white p-6 md:p-8 rounded-xl shadow-xl mb-8">
+                    </div>
+                <p id="final-message" class="text-md md:text-lg mb-10 leading-relaxed max-w-2xl mx-auto"></p>
+                 <button id="restart-button" class="restart-button-custom text-white font-semibold py-3 px-8 rounded-lg text-lg shadow-md transition-transform hover:scale-105">
+                    Refletir Novamente
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Elementos da UI
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const summaryScreen = document.getElementById('summary-screen'); 
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+
+        const npcImage = document.getElementById('npc-image');
+        const npcNameElement = document.getElementById('npc-name');
+        const dialogueTextElement = document.getElementById('dialogue-text');
+        const choicesArea = document.getElementById('choices-area');
+        const feedbackTextElement = document.getElementById('feedback-text');
+
+        const dimensionsPanel = document.getElementById('dimensions-panel');
+        const dimensionsList = document.getElementById('dimensions-list');
+        const profileSummaryPanel = document.getElementById('profile-summary-panel');
+        const toggleDimensionsButton = document.getElementById('toggle-dimensions-panel');
+
+        const sunflowerSummaryElement = document.getElementById('sunflower-summary');
+        const finalMessageElement = document.getElementById('final-message');
+
+        // Estado do Jogo
+        let currentSceneId = 'intro_nossou_1';
+        let workedDimensions = new Set();
+        // Perfil do jogador para rastrear "pontos" nas dimensões
+        let playerFeedbackProfile = {
+            escuta: 0,
+            proposito: 0,
+            relacionamento: 0,
+            praxis: 0,
+            autoconsciencia: 0,
+            compromisso: 0,
+            presenca: 0,
+        };
+        
+        // Mapeamento de nomes de dimensões para chaves do perfil (para consistência)
+        const dimensionKeyMap = {
+            "Escuta Empática": "escuta",
+            "Iniciativa Cuidadosa": "escuta", 
+            "Respeito ao Tempo do Outro": "escuta",
+            "Observação Sensível": "escuta",
+            "Criação de Ambiente Seguro": "presenca",
+            "Sensibilidade Afetiva": "escuta",
+            "Propósito e Responsabilidade": "proposito",
+            "Coerência Ética": "proposito",
+            "Clareza de Metas (externas)": "proposito", 
+            "Clareza de Propósito": "proposito", 
+            "Relação com Famílias": "relacionamento",
+            "Compromisso com a Rede": "compromisso",
+            "Comunicação Afetiva": "relacionamento",
+            "Busca por Soluções": "praxis", 
+            "Planejamento Pedagógico (Estruturado)": "praxis", 
+            "Criatividade e Adaptação": "praxis",
+            "Alinhamento com Crianças": "praxis",
+            "Planejamento Participativo": "praxis", 
+            "Escuta Ativa das Crianças": "escuta", 
+            "Negação de Limites": "autoconsciencia", 
+            "Reconhecimento de Limites": "autoconsciencia",
+            "Autocuidado do Educador": "autoconsciencia",
+            "Presença Consciente": "presenca",
+            "Revisão de Metas": "proposito" 
+        };
+
+        // Dados das Cenas/Jogo
+        // IMPORTANTE PARA OFFLINE: Substitua as URLs de 'npcImg' por caminhos locais para suas imagens.
+        // Ex: npcImg: 'img/nossou.png'
+        const scenes = {
+            'intro_nossou_1': {
+                npc: 'Nóssou',
+                npcImg: 'https://placehold.co/160x160/e6cbe4/000000?text=N%C3%B3ssou', // Lilac bg, black text
+                dialogue: "Você lembra de mim? Eu sou nóssou! E moro aqui no EuMundo. Minha imagem é um quebra-cabeça, assim como eu, que sou muitos e sou um só. Seja bem-vindo(a) a esta jornada de reflexão.",
+                choices: [{ text: "Lembro sim, Nóssou! É bom revê-lo.", nextScene: 'intro_nossou_2' }]
+            },
+            'intro_nossou_2': {
+                npc: 'Nóssou',
+                npcImg: 'https://placehold.co/160x160/e6cbe4/000000?text=N%C3%B3ssou',
+                dialogue: "Eu sou você aqui. É, você! O meu nome é a união das palavras NÓS e SOU. Represento a força do coletivo e a singularidade de cada um que trilha o caminho do educar com o coração.",
+                choices: [{ text: "Entendido, Nóssou. Uma bela união!", nextScene: 'intro_nossou_3' }]
+            },
+            'intro_nossou_3': {
+                npc: 'Nóssou',
+                npcImg: 'https://placehold.co/160x160/e6cbe4/000000?text=N%C3%B3ssou',
+                dialogue: "Estou aqui para ficar com você o quanto for necessário. Sua jornada de reflexão sobre o propósito da LABirintar – 'Ajudar as pessoas a mudarem o modo como enxergam as crianças e o lugar que elas ocupam no mundo' – começa agora. Respire fundo.",
+                choices: [{ text: "Estou pronto(a) para começar!", nextScene: 'clareira_escuta_intro' }]
+            },
+            'clareira_escuta_intro': {
+                npc: 'Dani & Júlio',
+                npcImg: 'https://placehold.co/160x160/aec5e7/000000?text=D%26J', // Blue bg
+                dialogue: "Você adentra A Clareira da Escuta, um lugar de serenidade. Dani sorri gentilmente, emanando calma, enquanto Júlio observa um pequeno pássaro que parece hesitante em se aproximar de uma fonte de água cristalina.",
+                choices: [{ text: "Observar a cena com atenção...", nextScene: 'clareira_escuta_dilema' }]
+            },
+            'clareira_escuta_dilema': {
+                npc: 'Dani',
+                npcImg: 'https://placehold.co/160x160/ff595a/FFFFFF?text=Dani', // Red bg, white text
+                dialogue: "Dani: Veja, nobre educador(a)... este pequeno ser parece sedento, mas receoso. Seu corpo miúdo revela uma história não dita. O que seu coração, sua escuta mais profunda, sugere neste instante?",
+                secondaryDialogue: "Júlio (em pensamento, voz suave): A pressa em saciar a sede alheia pode, por vezes, espantar o sedento. O silêncio da observação atenta também é uma forma de escuta. Qual o gesto mais sábio e respeitoso?",
+                dilemma: "O pássaro olha para a água, depois para você, e parece tremer um pouco, indeciso entre a necessidade e o medo.",
+                choices: [
+                    { text: "Aproximar-se lentamente, com movimentos suaves, e oferecer água fresca na palma da sua mão.", nextScene: 'trilha_proposito_intro', feedbackPoints: {escuta: 2, presenca: 1}, dimensions: ["Escuta Empática", "Iniciativa Cuidadosa"] },
+                    { text: "Afastar-se um pouco, criando um espaço seguro para o pássaro, e observar com paciência, esperando que ele se sinta à vontade.", nextScene: 'trilha_proposito_intro', feedbackPoints: {escuta: 2, autoconsciencia: 1}, dimensions: ["Respeito ao Tempo do Outro", "Observação Sensível"] },
+                    { text: "Cantarolar uma melodia muito suave e tranquila, buscando transmitir calma e segurança ao ambiente, sem focar diretamente no pássaro.", nextScene: 'trilha_proposito_intro', feedbackPoints: {presenca: 2, escuta: 1}, dimensions: ["Criação de Ambiente Seguro", "Sensibilidade Afetiva"] }
+                ]
+            },
+            'trilha_proposito_intro': {
+                npc: 'Edu & Rafael',
+                npcImg: 'https://placehold.co/160x160/ffa400/000000?text=E%26R', // Orange bg
+                dialogue: "Avançando, a trilha se estreita e o ar fica mais denso. Você encontra Edu, com seu olhar questionador, e Rafael, com uma energia inquieta, na Trilha do Propósito. Parecem debater algo com fervor.",
+                choices: [{ text: "Perguntar sobre o que os aflige...", nextScene: 'trilha_proposito_dilema'}]
+            },
+            'trilha_proposito_dilema': {
+                npc: 'Rafael',
+                npcImg: 'https://placehold.co/160x160/ffa400/000000?text=Rafael',
+                dialogue: "Rafael (direto): Propósito! Palavra bonita, não? Todos adoram! Mas olha só: surge um convite para um projeto 'inovador', daqueles que dão 'visibilidade' e aplausos. Só que o tempo é curtíssimo e a pressão por resultados 'quantificáveis' é brutal. E aí, o tal propósito sublime aguenta o tranco ou vira só discurso para impressionar?",
+                secondaryDialogue: "Edu (irônico): Ah, o palco adora um bom espetáculo... mesmo que os atores principais, as crianças, acabem virando meros figurantes de uma peça que não é delas. O brilho dos holofotes ofusca o brilho nos olhos dos pequenos?",
+                dilemma: "Como você decide conduzir este projeto 'vitrine', equilibrando as demandas externas com a essência da LABirintar?",
+                choices: [
+                    { text: "Focar em entregar resultados rápidos e visualmente impactantes, mesmo que isso signifique simplificar ou direcionar mais o processo criativo das crianças.", nextScene: 'ponte_relacoes_intro', feedbackPoints: {proposito: -1, praxis: 1}, dimensions: ["Clareza de Metas (externas)"] },
+                    { text: "Buscar um caminho do meio: tentar equilibrar as expectativas externas com os princípios da LABirintar, negociando prazos e formatos, e buscando brechas para a autonomia infantil, mesmo que os resultados sejam menos 'convencionais'.", nextScene: 'ponte_relacoes_intro', feedbackPoints: {proposito: 1, praxis: 1, autoconsciencia: 1}, dimensions: ["Coerência Ética", "Criatividade e Adaptação"] },
+                    { text: "Apresentar uma contraproposta corajosa, radicalmente alinhada ao propósito da LABirintar, focando no processo, na experiência significativa das crianças e na documentação sensível desse percurso, mesmo que isso desafie as expectativas de 'produto final' e possa gerar incompreensão inicial.", nextScene: 'ponte_relacoes_intro', feedbackPoints: {proposito: 2, compromisso: 1}, dimensions: ["Propósito e Responsabilidade", "Alinhamento com Crianças"] }
+                ]
+            },
+            'ponte_relacoes_intro': {
+                npc: 'Bruno & Dani',
+                npcImg: 'https://placehold.co/160x160/aec5e7/000000?text=B%26D', 
+                dialogue: "Você chega à Ponte das Relações, um lugar onde fios de diversas cores e texturas se entrelaçam. Bruno, com sua habilidade de conectar, tenta tecer alguns fios mais ásperos. Dani observa com um sorriso acolhedor, emanando empatia.",
+                choices: [{ text: "Admirar a complexa tecelagem...", nextScene: 'ponte_relacoes_dilema'}]
+            },
+            'ponte_relacoes_dilema': {
+                npc: 'Bruno',
+                npcImg: 'https://placehold.co/160x160/aec5e7/000000?text=Bruno',
+                dialogue: "Bruno: Conectar é uma arte delicada, não acha? Veja este desafio: uma família, com as melhores intenções, expressa uma preocupação genuína. Querem atividades mais 'formais' e direcionadas para o filho, pois temem que ele 'fique para trás' em relação a outras crianças. Sua abordagem LABirintar, como sabe, prioriza o brincar livre e a aprendizagem pela experiência.",
+                secondaryDialogue: "Dani (com ternura): Como podemos tecer essa conversa, encontrando o tom que acolhe o medo e a expectativa da família, ao mesmo tempo que honramos a singularidade e o ritmo da criança? Onde o afeto encontra a clareza?",
+                dilemma: "Qual sua abordagem para este diálogo tão importante e potencialmente delicado com a família?",
+                choices: [
+                    { text: "Explicar com firmeza e clareza os princípios pedagógicos da LABirintar, apresentando os fundamentos da sua abordagem e os benefícios do brincar livre, convidando a família a confiar no processo e na sua expertise.", nextScene: 'atelie_praxis_intro', feedbackPoints: {relacionamento: 0, compromisso: 1, proposito: 1}, dimensions: ["Clareza de Propósito"] },
+                    { text: "Acolher a preocupação da família com escuta ativa e empática, validar seus sentimentos e receios, e então buscar um diálogo co-construtivo, talvez convidando-os para observar uma vivência ou buscando juntos pequenas adaptações ou formas de visibilizar as ricas aprendizagens que já ocorrem.", nextScene: 'atelie_praxis_intro', feedbackPoints: {relacionamento: 2, escuta: 2}, dimensions: ["Relação com Famílias", "Comunicação Afetiva"] },
+                    { text: "Sugerir a colaboração de outro Educador Empreendedor da rede que tenha mais experiência em comunicar os processos da LABirintar para famílias, ou compartilhar materiais e experiências da rede que abordem especificamente essa questão, buscando fortalecer o diálogo com mais vozes e recursos.", nextScene: 'atelie_praxis_intro', feedbackPoints: {relacionamento: 1, compromisso: 2}, dimensions: ["Compromisso com a Rede", "Busca por Soluções"] }
+                ]
+            },
+            'atelie_praxis_intro': {
+                npc: 'Marquito & Bruno',
+                npcImg: 'https://placehold.co/160x160/e6cbe4/000000?text=M%26B', 
+                dialogue: "Bem-vindo(a) ao Ateliê da Práxis! Um espaço efervescente de criação. Marquito, com seu olhar que vê poesia em tudo, rabisca ideias vibrantes em grandes papéis. Bruno, com seu senso prático, organiza ferramentas e materiais com precisão.",
+                choices: [{ text: "Sentir a energia criativa do ateliê...", nextScene: 'atelie_praxis_dilema' }]
+            },
+            'atelie_praxis_dilema': {
+                npc: 'Marquito',
+                npcImg: 'https://placehold.co/160x160/e6cbe4/000000?text=Marquito',
+                dialogue: "Marquito (entusiasmado): Artista da educação! Temos um desafio que é pura inspiração: um grupo de crianças com idades, interesses e ritmos bem variados. Os materiais disponíveis são simples e ricos: argila, tintas naturais, gravetos, folhas, tecidos... Como você, com sua sensibilidade, orquestra essa sinfonia criativa e pedagógica?",
+                secondaryDialogue: "Bruno (ponderado): O tempo é um recurso precioso, e a liberdade precisa de um certo contorno para florescer. A organização do caos criativo, mantendo o foco no desenvolvimento de cada um, é uma arte em si.",
+                dilemma: "Como você planeja e facilita uma vivência significativa e inclusiva nestas condições desafiadoras?",
+                choices: [
+                    { text: "Propor uma atividade mais estruturada, com um tema unificador e etapas claras para todos, garantindo que cada criança tenha um ponto de partida e possa chegar a uma produção visível.", nextScene: 'espelho_alma_intro', feedbackPoints: {praxis: 1, proposito: 0}, dimensions: ["Planejamento Pedagógico (Estruturado)"] },
+                    { text: "Criar 'estações de exploração' com os diferentes materiais, convidando as crianças a circularem e interagirem livremente com o que mais lhes atrair, enquanto você observa, media e apoia suas descobertas individuais e em pequenos grupos.", nextScene: 'espelho_alma_intro', feedbackPoints: {praxis: 2, presenca: 1, escuta:1}, dimensions: ["Criatividade e Adaptação", "Alinhamento com Crianças"] },
+                    { text: "Iniciar uma roda de conversa, apresentando os materiais e provocando a curiosidade das crianças. A partir de suas ideias, interesses e perguntas, co-construir com elas o plano de ação da vivência, tornando-as protagonistas do processo.", nextScene: 'espelho_alma_intro', feedbackPoints: {praxis: 2, escuta: 2, compromisso: 1}, dimensions: ["Planejamento Participativo", "Escuta Ativa das Crianças"] }
+                ]
+            },
+            'espelho_alma_intro': {
+                npc: 'Júlio & Rafael',
+                npcImg: 'https://placehold.co/160x160/000000/FFFFFF?text=J%26R', 
+                dialogue: "A jornada te conduz a um local de profunda quietude e introspecção: O Espelho da Alma. Júlio está em meditação serena próximo a um lago de águas espelhadas. Rafael te encara com uma intensidade que convida à verdade.",
+                choices: [{ text: "Contemplar seu próprio reflexo nas águas...", nextScene: 'espelho_alma_dilema' }]
+            },
+            'espelho_alma_dilema': {
+                npc: 'Júlio',
+                npcImg: 'https://placehold.co/160x160/000000/FFFFFF?text=J%C3%BAlio',
+                dialogue: "Júlio (voz calma): No silêncio, a alma se revela sem disfarces. Após um período intenso de dedicação, com seus desafios e aprendizados, é natural sentir o peso do caminho e, por vezes, questionar o próprio impacto. O que este espelho da sua alma lhe mostra neste momento?",
+                secondaryDialogue: "Rafael (incisivo): Honestidade, educador(a)! Sem máscaras, sem desculpas. O cansaço que você tenta esconder, a dúvida que te corrói por dentro, aquela pontinha de frustração... Encare de frente! O que você realmente precisa agora?",
+                dilemma: "Como você lida com o esgotamento físico e emocional e o questionamento interno sobre sua prática e propósito?",
+                choices: [
+                    { text: "'Engolir o cansaço' e seguir em frente com ainda mais afinco e determinação, acreditando que é apenas uma fase passageira e que precisa se esforçar mais para superar.", nextScene: 'final_summary', feedbackPoints: {autoconsciencia: -2, presenca: -1}, dimensions: ["Negação de Limites"] },
+                    { text: "Reconhecer o esgotamento como um sinal importante. Buscar apoio na rede, conversar com colegas, dedicar tempo ao autocuidado e à recarga de energias, mesmo que isso signifique adiar alguns compromissos ou ajustar o ritmo.", nextScene: 'final_summary', feedbackPoints: {autoconsciencia: 2, presenca: 1, relacionamento:1}, dimensions: ["Reconhecimento de Limites", "Autocuidado do Educador"] },
+                    { text: "Fazer uma pausa para reavaliar profundamente seus compromissos, sua forma de atuação e suas fontes de energia. Questionar se suas metas são realistas e se seu propósito precisa ser redescoberto ou nutrido de novas maneiras para garantir a sustentabilidade da sua entrega.", nextScene: 'final_summary', feedbackPoints: {autoconsciencia: 2, proposito: 2}, dimensions: ["Presença Consciente", "Revisão de Metas"] }
+                ]
+            },
+            'final_summary': { 
+                isEnd: true 
+            }
+        };
+
+        // Função para iniciar o jogo
+        function startGame() {
+            startScreen.classList.add('fade-out');
+            setTimeout(() => {
+                startScreen.classList.remove('fade-out'); 
+                startScreen.classList.add('hidden');
+                
+                gameScreen.classList.remove('hidden');
+                gameScreen.classList.add('fade-in');
+                dimensionsPanel.classList.add('open');
+                loadScene(currentSceneId);
+            }, 700); 
+        }
+
+        // Função para carregar uma cena
+        function loadScene(sceneId) {
+            const scene = scenes[sceneId];
+            if (!scene) {
+                console.error("Cena não encontrada:", sceneId);
+                return;
+            }
+
+            if (scene.isEnd) { 
+                showSummaryScreen();
+                return;
+            }
+            
+            const contentToAnimate = [npcImage, npcNameElement, dialogueTextElement, choicesArea, feedbackTextElement];
+            contentToAnimate.forEach(el => el.classList.add('fade-out'));
+
+            setTimeout(() => {
+                npcImage.src = scene.npcImg;
+                npcNameElement.textContent = scene.npc;
+                
+                let fullDialogue = `<p class="mb-3">${scene.dialogue}</p>`;
+                if (scene.secondaryDialogue) {
+                    fullDialogue += `<em class='text-sm mt-2 block mb-3'>${scene.secondaryDialogue}</em>`;
+                }
+                if (scene.dilemma) {
+                    fullDialogue += `<strong class='text-md mt-4 block'>${scene.dilemma}</strong>`;
+                }
+                dialogueTextElement.innerHTML = fullDialogue;
+
+                choicesArea.innerHTML = '';
+                feedbackTextElement.textContent = '';
+
+                if (scene.choices) {
+                    scene.choices.forEach(choice => {
+                        const button = document.createElement('button');
+                        button.textContent = choice.text;
+                        button.classList.add('choice-button');
+                        button.onclick = () => handleChoice(choice);
+                        choicesArea.appendChild(button);
+                    });
+                }
+                
+                contentToAnimate.forEach(el => {
+                    el.classList.remove('fade-out');
+                    el.classList.add('fade-in');
+                });
+                
+                setTimeout(() => {
+                     contentToAnimate.forEach(el => el.classList.remove('fade-in'));
+                }, 700);
+            }, 700); 
+        }
+
+        // Função para lidar com a escolha do jogador
+        function handleChoice(choice) {
+            if (choice.dimensions) {
+                choice.dimensions.forEach(dim => workedDimensions.add(dim));
+                updateDimensionsPanelDisplay(); 
+                feedbackTextElement.textContent = `Sua escolha ecoa em: ${choice.dimensions.join(', ')}. Um ponto para reflexão...`;
+            } else {
+                feedbackTextElement.textContent = '';
+            }
+
+            if (choice.feedbackPoints) {
+                for (const dimKey in choice.feedbackPoints) {
+                    if (playerFeedbackProfile.hasOwnProperty(dimKey)) {
+                        playerFeedbackProfile[dimKey] += choice.feedbackPoints[dimKey];
+                    }
+                }
+                updateProfileSummaryPanel(); 
+            }
+            
+            currentSceneId = choice.nextScene;
+            if (currentSceneId) {
+                setTimeout(() => {
+                    loadScene(currentSceneId);
+                }, choice.dimensions ? 3000 : 700);
+            } else {
+                console.error("Próxima cena não definida para a escolha:", choice);
+            }
+        }
+
+        // Função para atualizar o painel de dimensões descobertas
+        function updateDimensionsPanelDisplay() {
+            dimensionsList.innerHTML = ''; 
+            if (workedDimensions.size === 0) {
+                const listItem = document.createElement('li');
+                listItem.textContent = "Nenhuma ainda...";
+                // Aplicando classes de estilo diretamente via JS para itens de lista
+                listItem.style.color = 'var(--lab-dark-gray)';
+                listItem.style.padding = '12px';
+                listItem.style.backgroundColor = 'var(--lab-white)';
+                listItem.style.borderRadius = '8px';
+                listItem.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                listItem.style.fontStyle = 'italic';
+                dimensionsList.appendChild(listItem);
+            } else {
+                workedDimensions.forEach(dim => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = dim;
+                    listItem.classList.add("dimension-item"); // Usa a classe CSS definida
+                    dimensionsList.appendChild(listItem);
+                });
+            }
+        }
+
+        // Função para atualizar o resumo do perfil no painel lateral
+        function updateProfileSummaryPanel() {
+            profileSummaryPanel.innerHTML = ''; 
+            for (const key in playerFeedbackProfile) {
+                const displayName = Object.keys(dimensionKeyMap).find(k => dimensionKeyMap[k] === key && workedDimensions.has(k)) || 
+                                  Object.keys(dimensionKeyMap).find(k => dimensionKeyMap[k] === key) || 
+                                  key.charAt(0).toUpperCase() + key.slice(1);
+                const value = playerFeedbackProfile[key];
+
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('profile-summary-panel-item');
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = `${displayName}: `;
+                nameSpan.classList.add('name'); // Adiciona classe para estilização
+                itemDiv.appendChild(nameSpan);
+
+                const valueSpan = document.createElement('span');
+                valueSpan.textContent = value; 
+                valueSpan.classList.add('value'); // Adiciona classe para estilização
+                if (value > 0) valueSpan.classList.add('value-positive');
+                else if (value < 0) valueSpan.classList.add('value-negative');
+                else valueSpan.classList.add('value-neutral');
+                
+                itemDiv.appendChild(valueSpan);
+                profileSummaryPanel.appendChild(itemDiv);
+            }
+        }
+        
+        // Função para mostrar a tela de sumário
+        function showSummaryScreen() {
+            gameScreen.classList.add('fade-out');
+            dimensionsPanel.classList.remove('open'); 
+
+            setTimeout(() => {
+                gameScreen.classList.remove('fade-out');
+                gameScreen.classList.add('hidden');
+                summaryScreen.classList.remove('hidden');
+                summaryScreen.classList.add('fade-in');
+                renderFinalSummary();
+            }, 700);
+        }
+
+        // Função para renderizar o sumário final
+        function renderFinalSummary() {
+            sunflowerSummaryElement.innerHTML = '<p class="text-slate-600 mb-6 italic text-lg">Sua jornada revelou nuances importantes sobre sua prática como Educador(a) Empreendedor(a). Veja como suas escolhas ecoaram nas dimensões da LABirintar:</p>';
+            let strengths = [];
+            let reflectionAreas = [];
+
+            const sortedProfile = Object.entries(playerFeedbackProfile)
+                .sort(([,a],[,b]) => b-a); 
+
+            sortedProfile.forEach(([key, value]) => {
+                const displayName = Object.keys(dimensionKeyMap).find(k => dimensionKeyMap[k] === key) || key.charAt(0).toUpperCase() + key.slice(1);
+
+                const dimensionDiv = document.createElement('div');
+                dimensionDiv.classList.add('mb-4'); // Equivalente a mb-4 do Tailwind
+
+                const nameP = document.createElement('p');
+                nameP.textContent = displayName;
+                nameP.style.fontSize = '1.125rem'; // text-lg
+                nameP.style.fontWeight = '600'; // font-semibold
+                nameP.style.marginBottom = '0.25rem'; // mb-1
+                nameP.style.color = 'var(--lab-black)';
+                dimensionDiv.appendChild(nameP);
+
+                const barContainer = document.createElement('div');
+                barContainer.classList.add('summary-dimension-bar-container');
+                
+                const bar = document.createElement('div');
+                bar.classList.add('summary-dimension-bar');
+                
+                const minExpectedValue = -4;
+                const maxExpectedValue = 6;
+                const range = maxExpectedValue - minExpectedValue; 
+                const normalizedValue = Math.max(0, Math.min(100, ((value - minExpectedValue) / range) * 100));
+                
+                bar.style.width = `${normalizedValue}%`;
+                bar.textContent = `${value}`; 
+                
+                barContainer.appendChild(bar);
+                dimensionDiv.appendChild(barContainer);
+                sunflowerSummaryElement.appendChild(dimensionDiv);
+
+                if (value >= 2) strengths.push(displayName.toLowerCase());
+                if (value <= 0) reflectionAreas.push(displayName.toLowerCase());
+            });
+            
+            let finalMsgText = "Sua jornada no Espelho LABirintar foi única. ";
+            if (strengths.length > 0) {
+                finalMsgText += `Percebemos uma forte ressonância com ${strengths.join(', e ')}, indicando áreas onde sua prática já floresce com os princípios da LABirintar. Celebre essas potências! `;
+            } else {
+                finalMsgText += "Você demonstrou uma abertura para explorar diversas facetas da sua atuação. ";
+            }
+
+            if (reflectionAreas.length > 0) {
+                finalMsgText += `Convidamos você a um olhar carinhoso e aprofundado sobre aspectos como ${reflectionAreas.join(', e ')}. Lembre-se, a autoavaliação é um contínuo desabrochar. `;
+            }
+            finalMsgText += "Que este reflexo inspire seus próximos passos, nutrindo sempre o propósito de transformar o olhar sobre a infância. A LABirintar pulsa em cada educador que ousa sentir, refletir e agir com o coração.";
+            finalMessageElement.textContent = finalMsgText;
+        }
+
+        // Função para reiniciar o jogo
+        function resetGame() {
+            summaryScreen.classList.add('fade-out');
+            dimensionsPanel.classList.remove('open');
+
+            setTimeout(() => {
+                summaryScreen.classList.remove('fade-out');
+                summaryScreen.classList.add('hidden');
+                
+                startScreen.classList.remove('hidden');
+                startScreen.classList.add('fade-in');
+
+                currentSceneId = 'intro_nossou_1';
+                workedDimensions.clear();
+                playerFeedbackProfile = Object.fromEntries(Object.keys(playerFeedbackProfile).map(key => [key, 0]));
+                updateDimensionsPanelDisplay();
+                updateProfileSummaryPanel();
+                feedbackTextElement.textContent = '';
+            }, 700);
+        }
+
+        // Event Listeners
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', resetGame);
+        toggleDimensionsButton.addEventListener('click', () => {
+            dimensionsPanel.classList.toggle('open');
+            toggleDimensionsButton.classList.toggle('panel-open', dimensionsPanel.classList.contains('open'));
+        });
+
+        // Inicializa os painéis
+        updateDimensionsPanelDisplay();
+        updateProfileSummaryPanel();
+    </script>
+</body>
+</html>
